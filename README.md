@@ -1,36 +1,68 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🔐 Web Text Encryptor
 
-## Getting Started
+A web-based encryption tool that allows users to encrypt and decrypt text using various algorithms including Caesar Cipher, AES, DES, RSA, and Base64.
 
-First, run the development server:
+🚀 **Live App:** [https://web-text-encryptor-git-main-abdullah-khalids-projects.vercel.app/](https://web-text-encryptor-git-main-abdullah-khalids-projects.vercel.app/)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+---
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 📌 Features
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- 🔤 Enter plain text to encrypt or decrypt
+- 📂 Select from multiple encryption algorithms:
+  - Caesar Cipher
+  - AES (simulation)
+  - DES (simulation)
+  - RSA (simulation)
+  - Base64
+- 🔁 Supports both **encryption** and **decryption** (where applicable)
+- 🧮 Includes **SHA-256** and **MD5** hashing options (one-way)
+- 🛡️ Input validation for empty text and missing selection
+- 📋 Copy ciphertext to clipboard with one click
+- 🧪 Simple, clean UI with user-friendly experience
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## ⚙️ Technologies Used
 
-To learn more about Next.js, take a look at the following resources:
+- **Frontend:** React, Next.js (App Router with Client Components)
+- **Icons:** Lucide React
+- **Styling:** Tailwind CSS
+- **Deployment:** Vercel
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 🧠 Algorithms Simulated
 
-## Deploy on Vercel
+| Algorithm     | Encrypt | Decrypt | Key Required | Type        |
+|---------------|---------|---------|--------------|-------------|
+| Caesar Cipher | ✅      | ✅      | Yes (number) | Symmetric   |
+| AES           | ✅      | ✅      | Simulated    | Symmetric   |
+| DES           | ✅      | ✅      | Simulated    | Symmetric   |
+| RSA           | ✅      | ✅      | Simulated    | Asymmetric  |
+| Base64        | ✅      | ✅      | No           | Encoding    |
+| SHA-256       | ✅      | ❌      | No           | Hashing     |
+| MD5           | ✅      | ❌      | No           | Hashing     |
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+> 🔒 Note: AES, DES, and RSA are simulated for demo purposes and **not cryptographically secure**.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+## 🧪 How to Use
+
+1. Visit the app: [web-text-encryptor.vercel.app](https://web-text-encryptor-git-main-abdullah-khalids-projects.vercel.app/)
+2. Enter the text you want to encrypt or decrypt.
+3. Choose an encryption algorithm from the dropdown.
+4. (If required) Enter a key (e.g., Caesar shift).
+5. Choose `Encrypt` or `Decrypt` mode.
+6. Click the button to process the text.
+7. Copy the result using the clipboard icon.
+
+---
+
+## 📷 Screenshots (Optional)
+
+> You can add screenshots by placing images in a `/public/screenshots/` folder and linking like so:
+
+```markdown
+![Encryption UI](public/screenshots/encryption-ui.png)

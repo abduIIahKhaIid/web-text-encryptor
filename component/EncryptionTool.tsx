@@ -23,7 +23,7 @@ export default function EncryptionApp() {
 
     const algorithms: Algorithm[] = [
         { value: 'caesar', label: 'Caesar Cipher', needsKey: true, keyType: 'number' },
-        { value: 'xor', label: 'XOR Encryption', needsKey: true, keyType: 'text' },
+        // { value: 'xor', label: 'XOR Encryption', needsKey: true, keyType: 'text' },
         { value: 'base64', label: 'Base64 Encoding', needsKey: false },
         { value: 'sha256', label: 'SHA-256 Hash (Simulation)', needsKey: false },
         { value: 'md5', label: 'MD5 Hash (Simulation)', needsKey: false },
