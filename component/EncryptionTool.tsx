@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Copy, Check, Lock, Unlock } from 'lucide-react';
 
-type CipherMethod = 'caesar' | 'xor' | 'base64' | 'sha256' | 'md5';
+type CipherMethod = 'caesar' | 'xor' | 'base64' | 'sha256' | 'md5' | 'aes' | 'des' | 'rsa';
 
 interface Algorithm {
     value: CipherMethod;
@@ -27,6 +27,9 @@ export default function EncryptionApp() {
         { value: 'base64', label: 'Base64 Encoding', needsKey: false },
         { value: 'sha256', label: 'SHA-256 Hash (Simulation)', needsKey: false },
         { value: 'md5', label: 'MD5 Hash (Simulation)', needsKey: false },
+        { value: 'aes', label: 'AES (Simulated)', needsKey: true, keyType: 'text' },
+        { value: 'des', label: 'DES (Simulated)', needsKey: true, keyType: 'text' },
+        { value: 'rsa', label: 'RSA (Simulated)', needsKey: true, keyType: 'text' },
     ];
 
     const validateInput = (): boolean => {
@@ -47,22 +50,15 @@ export default function EncryptionApp() {
         return true;
     };
 
-    // —————————————————————————————————————————
-    // Helper functions, now fully typed
-    // —————————————————————————————————————————
-
     const caesarCipher = (text: string, shift: number, decrypt = false): string => {
-        // Normalize shift to between 0–25
         let s = ((shift % 26) + 26) % 26;
         if (decrypt) s = (26 - s) % 26;
 
         return Array.from(text).map(char => {
             const code = char.charCodeAt(0);
-            // Uppercase A–Z
             if (code >= 65 && code <= 90) {
                 return String.fromCharCode(((code - 65 + s) % 26) + 65);
             }
-            // Lowercase a–z
             if (code >= 97 && code <= 122) {
                 return String.fromCharCode(((code - 97 + s) % 26) + 97);
             }
@@ -99,7 +95,7 @@ export default function EncryptionApp() {
         if (!text) return '0';
         for (const char of text) {
             h = ((h << 5) - h) + char.charCodeAt(0);
-            h |= 0; // to 32-bit
+            h |= 0;
         }
         return Math.abs(h).toString(16);
     };
@@ -117,9 +113,18 @@ export default function EncryptionApp() {
         return simpleHash(text).padStart(32, '0').slice(0, 32);
     };
 
-    // —————————————————————————————————————————
-    // Main processText
-    // —————————————————————————————————————————
+    // Simulated symmetric encryption for AES/DES
+    const simulateSymmetricEncryption = (text: string, key: string, decrypt = false): string => {
+        const reversed = text.split('').reverse().join('');
+        return decrypt ? reversed.replace(key, '') : reversed + key;
+    };
+
+    // Simulated asymmetric encryption for RSA
+    const simulateRSA = (text: string, key: string, decrypt = false): string => {
+        return decrypt
+            ? Array.from(text).map(c => String.fromCharCode(c.charCodeAt(0) - 1)).join('')
+            : Array.from(text).map(c => String.fromCharCode(c.charCodeAt(0) + 1)).join('');
+    };
 
     const processText = () => {
         if (!validateInput()) return;
@@ -128,22 +133,26 @@ export default function EncryptionApp() {
             let result = '';
             switch (selectedAlgorithm) {
                 case 'caesar':
-                    // parseInt on the key (string) → number
                     result = caesarCipher(inputText, parseInt(key, 10), mode === 'decrypt');
                     break;
                 case 'xor':
                     result = xorCipher(inputText, key);
                     break;
                 case 'base64':
-                    result = mode === 'encrypt'
-                        ? base64Encode(inputText)
-                        : base64Decode(inputText);
+                    result = mode === 'encrypt' ? base64Encode(inputText) : base64Decode(inputText);
                     break;
                 case 'sha256':
                     result = sha256Like(inputText);
                     break;
                 case 'md5':
                     result = md5Like(inputText);
+                    break;
+                case 'aes':
+                case 'des':
+                    result = simulateSymmetricEncryption(inputText, key, mode === 'decrypt');
+                    break;
+                case 'rsa':
+                    result = simulateRSA(inputText, key, mode === 'decrypt');
                     break;
             }
             setOutputText(result);
