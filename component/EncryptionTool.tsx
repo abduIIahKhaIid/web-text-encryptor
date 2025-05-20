@@ -3,181 +3,153 @@
 import { useState } from 'react';
 import { Copy, Check, Lock, Unlock } from 'lucide-react';
 
-export default function EncryptionApp() {
-  const [inputText, setInputText] = useState('');
-  const [outputText, setOutputText] = useState('');
-  const [selectedAlgorithm, setSelectedAlgorithm] = useState('');
-  const [key, setKey] = useState('');
-  const [mode, setMode] = useState('encrypt');
-  const [copied, setCopied] = useState(false);
-  const [error, setError] = useState('');
+type CipherMethod = 'caesar' | 'xor' | 'base64' | 'sha256' | 'md5';
 
-  const algorithms = [
+interface Algorithm {
+  value: CipherMethod;
+  label: string;
+  needsKey: boolean;
+  keyType?: 'number' | 'text';
+}
+
+export default function EncryptionApp() {
+  const [inputText, setInputText] = useState<string>('');
+  const [outputText, setOutputText] = useState<string>('');
+  const [selectedAlgorithm, setSelectedAlgorithm] = useState<CipherMethod | ''>('');
+  const [key, setKey] = useState<string>('');
+  const [mode, setMode] = useState<'encrypt' | 'decrypt'>('encrypt');
+  const [copied, setCopied] = useState<boolean>(false);
+  const [error, setError] = useState<string>('');
+
+  const algorithms: Algorithm[] = [
     { value: 'caesar', label: 'Caesar Cipher', needsKey: true, keyType: 'number' },
-    { value: 'xor', label: 'XOR Encryption', needsKey: true, keyType: 'text' },
+    { value: 'xor',    label: 'XOR Encryption', needsKey: true, keyType: 'text' },
     { value: 'base64', label: 'Base64 Encoding', needsKey: false },
     { value: 'sha256', label: 'SHA-256 Hash (Simulation)', needsKey: false },
-    { value: 'md5', label: 'MD5 Hash (Simulation)', needsKey: false },
+    { value: 'md5',    label: 'MD5 Hash (Simulation)', needsKey: false },
   ];
 
-  const validateInput = () => {
+  const validateInput = (): boolean => {
     if (!inputText.trim()) {
       setError('Please enter some text to process');
       return false;
     }
-    
     if (!selectedAlgorithm) {
       setError('Please select an encryption algorithm');
       return false;
     }
-    
-    const algorithm = algorithms.find(algo => algo.value === selectedAlgorithm);
-    if (algorithm && algorithm.needsKey && !key.trim()) {
-      setError(`Please enter a ${algorithm.keyType === 'number' ? 'number' : 'key'} for ${algorithm.label}`);
+    const algo = algorithms.find(a => a.value === selectedAlgorithm)!;
+    if (algo.needsKey && !key.trim()) {
+      setError(`Please enter a ${algo.keyType === 'number' ? 'number' : 'key'} for ${algo.label}`);
       return false;
     }
-    
     setError('');
     return true;
   };
 
-  // Custom encryption implementations
-  
-  // Caesar Cipher implementation
-  const caesarCipher = (text, shift, decrypt = false) => {
-    // Normalize shift to be between 0-25
-    shift = ((parseInt(shift) % 26) + 26) % 26;
-    
-    if (decrypt) {
-      shift = (26 - shift) % 26;
-    }
-    
-    return text.split('').map(char => {
+  // —————————————————————————————————————————
+  // Helper functions, now fully typed
+  // —————————————————————————————————————————
+
+  const caesarCipher = (text: string, shift: number, decrypt = false): string => {
+    // Normalize shift to between 0–25
+    let s = ((shift % 26) + 26) % 26;
+    if (decrypt) s = (26 - s) % 26;
+
+    return Array.from(text).map(char => {
       const code = char.charCodeAt(0);
-      
-      // Handle uppercase letters
+      // Uppercase A–Z
       if (code >= 65 && code <= 90) {
-        return String.fromCharCode(((code - 65 + shift) % 26) + 65);
+        return String.fromCharCode(((code - 65 + s) % 26) + 65);
       }
-      // Handle lowercase letters
-      else if (code >= 97 && code <= 122) {
-        return String.fromCharCode(((code - 97 + shift) % 26) + 97);
+      // Lowercase a–z
+      if (code >= 97 && code <= 122) {
+        return String.fromCharCode(((code - 97 + s) % 26) + 97);
       }
-      // Leave non-alphabetic characters unchanged
       return char;
     }).join('');
   };
 
-  // Simple XOR encryption/decryption
-  const xorCipher = (text, key) => {
-    const keyChars = key.split('');
-    
-    return text.split('').map((char, i) => {
-      // Use modulo to cycle through the key characters
-      const keyChar = keyChars[i % keyChars.length];
-      // XOR the character code with the key character code
-      const charCode = char.charCodeAt(0) ^ keyChar.charCodeAt(0);
-      return String.fromCharCode(charCode);
+  const xorCipher = (text: string, key: string): string => {
+    const keyChars = Array.from(key);
+    return Array.from(text).map((char, i) => {
+      const k = keyChars[i % keyChars.length].charCodeAt(0);
+      const c = char.charCodeAt(0) ^ k;
+      return String.fromCharCode(c);
     }).join('');
   };
 
-  // Base64 encoding/decoding
-  const base64Encode = (text) => {
+  const base64Encode = (text: string): string => {
     try {
       return btoa(unescape(encodeURIComponent(text)));
-    } catch (e) {
+    } catch {
       return '';
     }
   };
-
-  const base64Decode = (text) => {
+  const base64Decode = (text: string): string => {
     try {
       return decodeURIComponent(escape(atob(text)));
-    } catch (e) {
-      // Handle invalid Base64 input
+    } catch {
       return '';
     }
   };
 
-  // Simple hash function (not cryptographically secure)
-  const simpleHash = (text) => {
-    let hash = 0;
-    if (text.length === 0) return hash.toString(16);
-    
-    for (let i = 0; i < text.length; i++) {
-      const char = text.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash; // Convert to 32bit integer
+  const simpleHash = (text: string): string => {
+    let h = 0;
+    if (!text) return '0';
+    for (const char of text) {
+      h = ((h << 5) - h) + char.charCodeAt(0);
+      h |= 0; // to 32-bit
     }
-    
-    return Math.abs(hash).toString(16);
-  };
-  
-  // SHA-256-like hash (simplified version, not cryptographically secure)
-  const sha256Like = (text) => {
-    // Use a combination of techniques to create something that looks like SHA-256
-    // but doesn't require the crypto library
-    let hash = '';
-    
-    // First create a simple hash
-    const baseHash = simpleHash(text);
-    
-    // Extend it to look like SHA-256 (64 characters)
-    for (let i = 0; i < 8; i++) {
-      const chunk = simpleHash(text + i + baseHash);
-      hash += chunk.padStart(8, '0');
-    }
-    
-    return hash.substring(0, 64);
+    return Math.abs(h).toString(16);
   };
 
-  // MD5-like hash (simplified version, not cryptographically secure)
-  const md5Like = (text) => {
-    // Create a hash that visually resembles MD5 but is not cryptographically sound
-    return simpleHash(text).padStart(32, '0').substring(0, 32);
+  const sha256Like = (text: string): string => {
+    const base = simpleHash(text);
+    let h = '';
+    for (let i = 0; i < 8; i++) {
+      h += simpleHash(text + i + base).padStart(8, '0');
+    }
+    return h.slice(0, 64);
   };
+
+  const md5Like = (text: string): string => {
+    return simpleHash(text).padStart(32, '0').slice(0, 32);
+  };
+
+  // —————————————————————————————————————————
+  // Main processText
+  // —————————————————————————————————————————
 
   const processText = () => {
     if (!validateInput()) return;
-    
+
     try {
       let result = '';
-      
       switch (selectedAlgorithm) {
         case 'caesar':
-          result = caesarCipher(inputText, key, mode === 'decrypt');
+          // parseInt on the key (string) → number
+          result = caesarCipher(inputText, parseInt(key, 10), mode === 'decrypt');
           break;
-          
         case 'xor':
-          // XOR works the same way for encryption and decryption
           result = xorCipher(inputText, key);
           break;
-          
         case 'base64':
-          if (mode === 'encrypt') {
-            result = base64Encode(inputText);
-          } else {
-            result = base64Decode(inputText);
-          }
+          result = mode === 'encrypt'
+            ? base64Encode(inputText)
+            : base64Decode(inputText);
           break;
-          
         case 'sha256':
           result = sha256Like(inputText);
           break;
-          
         case 'md5':
           result = md5Like(inputText);
           break;
-          
-        default:
-          setError('Invalid algorithm selected');
-          return;
       }
-      
       setOutputText(result);
       setError('');
-    } catch (err) {
-      setError(`Processing error: ${err.message || 'Unknown error'}`);
+    } catch (e: any) {
+      setError(`Processing error: ${e.message || 'Unknown error'}`);
       setOutputText('');
     }
   };
